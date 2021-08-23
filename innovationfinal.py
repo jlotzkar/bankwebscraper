@@ -383,3 +383,148 @@ dfScotia = pd.concat(dfs)
 #deleting duplicate rows
 
 dfScotia = dfScotia.drop_duplicates()
+
+
+#%% Scraping RBC
+
+ 
+
+#reading URL, saving it
+
+req = Request(urlRBC, headers={'User-Agent': 'Mozilla/5.0'})
+
+webpage = urlopen(req).read()
+
+soup = BeautifulSoup(webpage, "lxml")
+
+ 
+
+dates = []
+
+articles = []
+
+links = []
+
+ 
+
+main_section = soup.find("div",{"class":"primarytabs-container"})
+
+sections = main_section.findAll("p")
+
+ 
+
+#searching through website and collecting dates, titles, etc.
+
+for section in sections:
+
+    try:   
+
+        date = section.find("span",{"class":"newsDate"})
+
+        dates.append(date.text.strip())
+
+    except:
+
+        dates.append("no date")
+
+       
+
+    try:   
+
+        title = section.find("span",{"class":"newsUrl"})
+
+        articles.append(title.text.strip())
+
+    except:
+
+        articles.append("no title")
+
+ 
+
+    try:
+
+        link = "rbc.com" + title.a['href']
+
+        links.append(link)
+
+    except:
+
+        links.append("no link")
+
+ 
+
+#saving to dataframe
+
+dfRBC = pd.DataFrame({"Date":dates, "Title":articles, "Link":links})
+
+ 
+
+#deleting rows with no valid links
+
+dfRBC = dfRBC[dfRBC['Link']!="no link"]
+
+ 
+
+#giving last 100 results from the dataframe
+
+dfRBC = dfRBC.head(100)
+
+ 
+
+#making date as index for dataframe
+
+#dfRBC.set_index(['Date'], drop = True, inplace = True)
+
+ 
+
+#convert to datetime
+
+dfRBC['Date'] = dfRBC['Date'].apply(pd.to_datetime)
+
+ 
+
+#filtering through titles with the following words (innovation-related trends)
+
+dfs = []
+
+keywords = ['new', 'technology', 'innovation', 'innovative', 'innovate', 'innovates', 'innovating', 'digital', 'crypto', 'blockchain', 'unveil', 'unveils', 'unveiling', 'launch', 'launches', 'launching', 'announce', 'announces', 'announcing', 'announcement', 'introduce', 'introduces', 'introducing', 'introduction']
+
+for key in keywords:
+
+    filterRBC =  dfRBC[dfRBC['Title'].str.contains(key)]
+
+    dfs.append(filterRBC)
+
+   
+
+#checking capitalized words
+
+for key in keywords:
+
+    filterRBC =  dfRBC[dfRBC['Title'].str.contains(key.capitalize())]
+
+    dfs.append(filterRBC)
+
+ 
+
+#final RBC dataframe
+
+dfRBC = pd.concat(dfs)
+
+   
+
+#convert to datetime
+
+#dfRBC.index = pd.to_datetime(dfRBC.index)
+
+ 
+
+#sorting by date
+
+#dfRBC = dfRBC.sort_index(ascending=False)
+
+ 
+
+#deleting duplicate rows
+
+dfRBC = dfRBC.drop_duplicates()
