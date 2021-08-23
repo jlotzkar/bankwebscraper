@@ -637,3 +637,152 @@ dfBMO = pd.concat(dfs)
 #deleting duplicate rows
 
 dfBMO = dfBMO.drop_duplicates()
+
+
+#%% Scraping NB
+
+ 
+
+#reading URL, saving it
+
+req = Request(urlNB, headers={'User-Agent': 'Mozilla/5.0'})
+
+webpage = urlopen(req).read()
+
+soup = BeautifulSoup(webpage, "lxml")
+
+ 
+
+dates = []
+
+articles = []
+
+links = []
+
+ 
+
+main_section = soup.find("ul",{"class":"index-list", "id":"index-list"})
+
+sections = main_section.findAll("li")
+
+ 
+
+#searching through website and collecting dates, titles, etc.
+
+for section in sections:
+
+    try:
+
+        outerdate = section.find("div",{"class":"article-city-date"})
+
+        date = outerdate.find_next('span').find_next('span')
+
+        dates.append(date.text.strip())
+
+    except:
+
+        dates.append("no date")
+
+       
+
+    try:   
+
+        #title = section.find("span",{"class":"newsUrl"})
+
+        hreftitle = section.find('a', href=True)
+
+        articles.append(hreftitle.text.strip())
+
+    except:
+
+        articles.append("no title")
+
+ 
+
+    try:
+
+        link = "nbc.ca" + section.a['href']
+
+        links.append(link)
+
+    except:
+
+        links.append("no link")
+
+ 
+
+#saving to dataframe
+
+dfNB = pd.DataFrame({"Date":dates, "Title":articles, "Link":links})
+
+ 
+
+#deleting rows with no valid links
+
+dfNB = dfNB[dfNB['Link']!="no link"]
+
+ 
+
+#giving last 100 results from the dataframe
+
+dfNB = dfNB.head(100)
+
+ 
+
+#making date as index for dataframe
+
+#dfNB.set_index(['Date'], drop = True, inplace = True)
+
+ 
+
+#convert to datetime
+
+dfNB['Date'] = dfNB['Date'].apply(pd.to_datetime)
+
+ 
+
+#filtering through titles with the following words (innovation-related trends)
+
+dfs = []
+
+keywords = ['new', 'technology', 'innovation', 'innovative', 'innovate', 'innovates', 'innovating', 'digital', 'crypto', 'blockchain', 'unveil', 'unveils', 'unveiling', 'launch', 'launches', 'launching', 'announce', 'announces', 'announcing', 'announcement', 'introduce', 'introduces', 'introducing', 'introduction']
+
+for key in keywords:
+
+    filterNB =  dfNB[dfNB['Title'].str.contains(key)]
+
+    dfs.append(filterNB)
+
+   
+
+#checking capitalized words
+
+for key in keywords:
+
+    filterNB =  dfNB[dfNB['Title'].str.contains(key.capitalize())]
+
+    dfs.append(filterNB)
+
+ 
+
+#final NB dataframe
+
+dfNB = pd.concat(dfs)
+
+ 
+
+#convert to datetime
+
+#dfNB.index = pd.to_datetime(dfNB.index)
+
+ 
+
+#sorting by date
+
+#dfNB = dfNB.sort_index(ascending=False)
+
+ 
+
+#deleting duplicate rows
+
+dfNB = dfNB.drop_duplicates()
