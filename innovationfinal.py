@@ -786,3 +786,60 @@ dfNB = pd.concat(dfs)
 #deleting duplicate rows
 
 dfNB = dfNB.drop_duplicates()
+
+
+#%% Combining and cleaning dataframes
+
+ 
+
+all_dfs = [dfCIBC, dfTD, dfScotia, dfRBC, dfBMO, dfNB]
+
+ 
+
+# =============================================================================
+
+# #ensuring column names are titled correctly
+
+# for df in all_dfs:
+
+#     df.columns = ['Date', 'Title', 'Link']
+
+# =============================================================================
+
+ 
+
+#concatenating dataframes on top of one another
+
+dfToExport = pd.concat(all_dfs).reset_index(drop=True)
+
+#dfToExport = pd.concat(all_dfs, axis = 1)
+
+ 
+
+#sorting entries by date
+
+#add date column --> not needed
+
+ 
+
+#making date as index for dataframe
+
+dfToExport.set_index(['Date'], drop = True, inplace = True)
+
+ 
+
+#convert dates to datetime
+
+#dfToExport['Date'] = pd.to_datetime(dfToExport['Date'], dayfirst=True)
+
+ 
+
+#next, sort dataframe
+
+dfToExport = dfToExport.sort_values('Date', ascending=False)
+
+ 
+
+#last step: most recent 100 articles (further subset)
+
+dfToExport = dfToExport.head(100)
