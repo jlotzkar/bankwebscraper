@@ -843,3 +843,10 @@ dfToExport = dfToExport.sort_values('Date', ascending=False)
 #last step: most recent 100 articles (further subset)
 
 dfToExport = dfToExport.head(100)
+
+
+#%% Exporting to Excel
+
+ 
+
+dfToExport.to_excel('Innovation_Articles.xlsx')
