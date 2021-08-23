@@ -138,3 +138,141 @@ dfCIBC = pd.concat(dfs)
 #deleting duplicate rows
 
 dfCIBC = dfCIBC.drop_duplicates()
+
+
+#%% Scraping TD
+
+ 
+
+#manipulating URLs to go through first 20 pages of website (20*5 on each page = 100 article collection through search)
+
+urlTDlist = []
+
+for i in range(0,100,5):
+
+    urlTD = "=".join(urlTD.split("=",2)[:2])+'='+str(i)
+
+    urlTDlist.append(urlTD)
+
+print(urlTDlist)
+
+ 
+
+#list to store TD dataframes
+
+dfTDlist = []
+
+ 
+
+#reading URLs, saving them
+
+for j in urlTDlist:
+
+    req = Request(j, headers={'User-Agent': 'Mozilla/5.0'})
+
+    webpage = urlopen(req).read()
+
+    soup = BeautifulSoup(webpage, "lxml")
+
+
+    dates = []
+
+    articles = []
+
+    links = []
+
+    sections = soup.findAll("div", {"class": "wd_item_wrapper"})
+
+ 
+
+    #searching through website and collecting dates, titles, etc.
+
+    for section in sections:
+
+        date = section.find("div",{"class":"wd_date"})
+
+        title = section.find("div",{"class":"wd_title"})
+
+        dates.append(date.text.strip())
+
+        articles.append(title.text.strip())
+
+        link = title.a['href']
+
+        links.append(link)
+
+ 
+
+    #saving to dataframe
+
+    dfTD = pd.DataFrame({"Date":dates, "Title":articles, "Link":links})
+
+    dfTDlist.append(dfTD)
+
+   
+
+#merging all dataframes in dfTDlist into single dataframe
+
+dfTD = pd.concat(dfTDlist)
+
+ 
+
+#making date as index for dataframe
+
+#dfTD.set_index(['Date'], drop = True, inplace = True)
+
+ 
+
+#convert to datetime
+
+#dfTD.index = pd.to_datetime(dfTD.index)
+
+dfTD['Date'] = dfTD['Date'].apply(pd.to_datetime)
+
+ 
+
+#filtering through titles with the following words (innovation-related trends)
+
+dfs = []
+
+keywords = ['new', 'technology', 'innovation', 'innovative', 'innovate', 'innovates', 'innovating', 'digital', 'crypto', 'blockchain', 'unveil', 'unveils', 'unveiling', 'launch', 'launches', 'launching', 'announce', 'announces', 'announcing', 'announcement', 'introduce', 'introduces', 'introducing', 'introduction']
+
+for key in keywords:
+
+    filterTD =  dfTD[dfTD['Title'].str.contains(key)]
+
+    dfs.append(filterTD)
+
+   
+
+#checking capitalized words
+
+for key in keywords:
+
+    filterTD =  dfTD[dfTD['Title'].str.contains(key.capitalize())]
+
+    dfs.append(filterTD)
+
+ 
+
+#final TD dataframe
+
+dfTD = pd.concat(dfs)
+
+   
+
+#convert to datetime
+
+#dfTD.index = pd.to_datetime(dfTD.index)
+
+ 
+
+#sorting by date
+
+#dfTD = dfTD.sort_index(ascending=False)
+
+ 
+
+#deleting duplicate rows
+
+dfTD = dfTD.drop_duplicates()
