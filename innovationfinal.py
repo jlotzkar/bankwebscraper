@@ -528,3 +528,112 @@ dfRBC = pd.concat(dfs)
 #deleting duplicate rows
 
 dfRBC = dfRBC.drop_duplicates()
+
+
+#%% Scraping BMO
+
+ 
+
+#reading URL, saving it
+
+req = Request(urlBMO, headers={'User-Agent': 'Mozilla/5.0'})
+
+webpage = urlopen(req).read()
+
+soup = BeautifulSoup(webpage, "lxml")
+
+ 
+
+dates = []
+
+articles = []
+
+links = []
+
+sections = soup.findAll("div", {"class": "wd_item_wrapper"})
+
+ 
+
+#searching through website and collecting dates, titles, etc.
+
+for section in sections:
+
+    date = section.find("div",{"class":"wd_date"})
+
+    title = section.find("div",{"class":"wd_title"})
+
+    dates.append(date.text.strip())
+
+    articles.append(title.text.strip())
+
+    link = title.a['href']
+
+    links.append(link)
+
+ 
+
+#saving to dataframe
+
+dfBMO = pd.DataFrame({"Date":dates, "Title":articles, "Link":links})
+
+ 
+
+#making date as index for dataframe
+
+#dfBMO.set_index(['Date'], drop = True, inplace = True)
+
+ 
+
+#convert to datetime
+
+#dfBMO.index = pd.to_datetime(dfBMO.index)
+
+dfBMO['Date'] = dfBMO['Date'].apply(pd.to_datetime)
+
+ 
+
+#filtering through titles with the following words (innovation-related trends)
+
+dfs = []
+
+keywords = ['new', 'technology', 'innovation', 'innovative', 'innovate', 'innovates', 'innovating', 'digital', 'crypto', 'blockchain', 'unveil', 'unveils', 'unveiling', 'launch', 'launches', 'launching', 'announce', 'announces', 'announcing', 'announcement', 'introduce', 'introduces', 'introducing', 'introduction']
+
+for key in keywords:
+
+    filterBMO =  dfBMO[dfBMO['Title'].str.contains(key)]
+
+    dfs.append(filterBMO)
+
+ 
+
+#checking capitalized words
+
+for key in keywords:
+
+    filterBMO =  dfBMO[dfBMO['Title'].str.contains(key.capitalize())]
+
+    dfs.append(filterBMO)
+
+ 
+
+#final BMO dataframe
+
+dfBMO = pd.concat(dfs)
+
+   
+
+#convert to datetime
+
+#dfBMO.index = pd.to_datetime(dfBMO.index)
+
+ 
+
+#sorting by date
+
+#dfBMO = dfBMO.sort_index(ascending=False)
+
+ 
+
+#deleting duplicate rows
+
+dfBMO = dfBMO.drop_duplicates()
